@@ -3,6 +3,15 @@ from backend.core.database import Base
 import datetime
 
 
+class Employee(Base):
+    __tablename__ = "employees"
+
+    id = Column(Integer, primary_key=True, index=True)
+    name = Column(String, nullable=False, unique=True, index=True)
+    department = Column(String, nullable=False)
+    created_at = Column(DateTime, default=datetime.datetime.now)
+
+
 class ReviewRecord(Base):
     __tablename__ = "reviews"
 
@@ -13,7 +22,9 @@ class ReviewRecord(Base):
     sentiment = Column(String)
     sentiment_confidence = Column(Float)
     skills_found = Column(String)  # comma-separated list
-    performance_score = Column(String)
-    score_confidence = Column(Float)
+    skill_gaps = Column(String)  # comma-separated list
+    behavioral_rating = Column(Integer)
+    performance_rating = Column(Integer)
     recommendations = Column(Text)
+    created_by = Column(String)
     created_at = Column(DateTime, default=datetime.datetime.now)

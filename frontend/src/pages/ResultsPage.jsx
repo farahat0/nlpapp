@@ -1,5 +1,23 @@
 import { useLocation, Link } from "react-router-dom";
 
+const RATING_LABELS = {
+  1: "Unsatisfactory",
+  2: "Below Expectations",
+  3: "Meets Expectations",
+  4: "Exceeds Expectations",
+  5: "Exceptional",
+};
+
+function RatingCard({ title, value }) {
+  return (
+    <div className="bg-white border border-gray-200 rounded-lg p-4">
+      <h2 className="text-sm font-medium text-gray-500 mb-1">{title}</h2>
+      <p className="text-2xl font-semibold text-gray-800">{value}/5</p>
+      <p className="text-sm text-gray-400">{RATING_LABELS[value] || "N/A"}</p>
+    </div>
+  );
+}
+
 export default function ResultsPage() {
   const location = useLocation();
   const data = location.state;
@@ -40,17 +58,10 @@ export default function ResultsPage() {
           </p>
         </div>
 
-        {/* Performance Score */}
-        <div className="bg-white border border-gray-200 rounded-lg p-4">
-          <h2 className="text-sm font-medium text-gray-500 mb-1">
-            Performance Score
-          </h2>
-          <p className="text-lg font-semibold text-gray-800">
-            {result.performance_score.score}
-          </p>
-          <p className="text-sm text-gray-400">
-            Confidence: {(result.performance_score.confidence * 100).toFixed(0)}%
-          </p>
+        {/* Behavioral & Performance Ratings */}
+        <div className="grid grid-cols-2 gap-4">
+          <RatingCard title="Behavioral Rating" value={result.behavioral_rating} />
+          <RatingCard title="Performance Rating" value={result.performance_rating} />
         </div>
 
         {/* Skills Found */}
@@ -62,13 +73,32 @@ export default function ResultsPage() {
             {result.skills_found.map((skill, i) => (
               <span
                 key={i}
-                className="bg-gray-100 text-gray-700 text-sm px-3 py-1 rounded-full"
+                className="bg-green-50 text-green-700 text-sm px-3 py-1 rounded-full border border-green-200"
               >
                 {skill}
               </span>
             ))}
           </div>
         </div>
+
+        {/* Skill Gaps */}
+        {result.skill_gaps && result.skill_gaps.length > 0 && (
+          <div className="bg-white border border-gray-200 rounded-lg p-4">
+            <h2 className="text-sm font-medium text-gray-500 mb-2">
+              Skill Gaps
+            </h2>
+            <div className="flex flex-wrap gap-2">
+              {result.skill_gaps.map((gap, i) => (
+                <span
+                  key={i}
+                  className="bg-orange-50 text-orange-700 text-sm px-3 py-1 rounded-full border border-orange-200"
+                >
+                  {gap}
+                </span>
+              ))}
+            </div>
+          </div>
+        )}
 
         {/* Recommendations */}
         <div className="bg-white border border-gray-200 rounded-lg p-4">

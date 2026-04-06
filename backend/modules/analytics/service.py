@@ -4,26 +4,67 @@ from collections import Counter
 from backend.modules.reviews.model import ReviewRecord
 
 
+def _compute_skill_counts(reviews, field="skills_found", top_n=5):
+    """Extract top N skills/gaps from comma-separated field across reviews."""
+    all_items = []
+    for r in reviews:
+        value = getattr(r, field, None)
+        if value:
+            all_items.extend([s.strip() for s in value.split(",") if s.strip()])
+    counts = Counter(all_items).most_common(top_n)
+    return [{"skill": skill, "count": count} for skill, count in counts]
+
+
 def get_overview_stats(db: Session) -> dict:
     """Get overall system statistics."""
-    total_reviews = db.query(ReviewRecord).count()
-    total_employees = db.query(func.count(func.distinct(ReviewRecord.employee_name))).scalar()
-    total_departments = db.query(func.count(func.distinct(ReviewRecord.department))).scalar()
+    reviews = db.query(ReviewRecord).all()
+    total_reviews = len(reviews)
 
-    # Sentiment distribution
-    sentiments = db.query(ReviewRecord.sentiment).all()
-    sentiment_counts = Counter(s[0] for s in sentiments if s[0])
+    if total_reviews == 0:
+        return {
+            "total_reviews": 0,
+            "average_behavioral_rating": 0.0,
+            "average_performance_rating": 0.0,
+            "sentiment_distribution": {"Positive": 0, "Negative": 0, "Neutral": 0},
+            "top_skills": [],
+            "top_gaps": [],
+        }
 
-    # Average score confidence
-    avg_confidence = db.query(func.avg(ReviewRecord.score_confidence)).scalar() or 0.0
+    avg_behavioral = sum(r.behavioral_rating or 0 for r in reviews) / total_reviews
+    avg_performance = sum(r.performance_rating or 0 for r in reviews) / total_reviews
+
+    sentiment_counts = Counter(r.sentiment for r in reviews if r.sentiment)
+    # Ensure all three keys exist
+    distribution = {"Positive": 0, "Negative": 0, "Neutral": 0}
+    distribution.update(dict(sentiment_counts))
 
     return {
         "total_reviews": total_reviews,
-        "total_employees": total_employees,
-        "total_departments": total_departments,
-        "sentiment_distribution": dict(sentiment_counts),
-        "average_score_confidence": round(avg_confidence, 2),
+        "average_behavioral_rating": round(avg_behavioral, 2),
+        "average_performance_rating": round(avg_performance, 2),
+        "sentiment_distribution": distribution,
+        "top_skills": _compute_skill_counts(reviews, "skills_found"),
+        "top_gaps": _compute_skill_counts(reviews, "skill_gaps"),
     }
+
+
+def get_employee_trend(employee_name: str, db: Session) -> list[dict]:
+    """Get review trend for an employee, ordered by date ascending."""
+    reviews = (
+        db.query(ReviewRecord)
+        .filter(ReviewRecord.employee_name == employee_name)
+        .order_by(ReviewRecord.created_at.asc())
+        .all()
+    )
+    return [
+        {
+            "date": r.created_at.isoformat() if r.created_at else "",
+            "behavioral_rating": r.behavioral_rating or 0,
+            "performance_rating": r.performance_rating or 0,
+            "sentiment": r.sentiment or "N/A",
+        }
+        for r in reviews
+    ]
 
 
 def get_department_stats(department: str, db: Session) -> dict:
@@ -38,33 +79,29 @@ def get_department_stats(department: str, db: Session) -> dict:
         return {
             "department": department,
             "total_reviews": 0,
-            "average_sentiment_confidence": 0.0,
-            "most_common_sentiment": "N/A",
-            "average_score_confidence": 0.0,
+            "average_behavioral_rating": 0.0,
+            "average_performance_rating": 0.0,
+            "sentiment_distribution": {"Positive": 0, "Negative": 0, "Neutral": 0},
             "top_skills": [],
+            "top_gaps": [],
         }
 
     total = len(reviews)
-    avg_sentiment_conf = sum(r.sentiment_confidence or 0 for r in reviews) / total
-    avg_score_conf = sum(r.score_confidence or 0 for r in reviews) / total
+    avg_behavioral = sum(r.behavioral_rating or 0 for r in reviews) / total
+    avg_performance = sum(r.performance_rating or 0 for r in reviews) / total
 
     sentiment_counts = Counter(r.sentiment for r in reviews if r.sentiment)
-    most_common = sentiment_counts.most_common(1)[0][0] if sentiment_counts else "N/A"
-
-    # Aggregate skills
-    all_skills = []
-    for r in reviews:
-        if r.skills_found:
-            all_skills.extend([s.strip() for s in r.skills_found.split(",")])
-    top_skills = [skill for skill, _ in Counter(all_skills).most_common(5)]
+    distribution = {"Positive": 0, "Negative": 0, "Neutral": 0}
+    distribution.update(dict(sentiment_counts))
 
     return {
         "department": department,
         "total_reviews": total,
-        "average_sentiment_confidence": round(avg_sentiment_conf, 2),
-        "most_common_sentiment": most_common,
-        "average_score_confidence": round(avg_score_conf, 2),
-        "top_skills": top_skills,
+        "average_behavioral_rating": round(avg_behavioral, 2),
+        "average_performance_rating": round(avg_performance, 2),
+        "sentiment_distribution": distribution,
+        "top_skills": _compute_skill_counts(reviews, "skills_found"),
+        "top_gaps": _compute_skill_counts(reviews, "skill_gaps"),
     }
 
 
@@ -86,13 +123,12 @@ def get_employee_stats(employee_name: str, db: Session) -> dict:
         }
 
     sentiments = [r.sentiment for r in reviews if r.sentiment]
-    scores = [r.performance_score for r in reviews if r.performance_score]
+    scores = [r.performance_rating for r in reviews if r.performance_rating]
 
     all_skills = []
     for r in reviews:
         if r.skills_found:
             all_skills.extend([s.strip() for s in r.skills_found.split(",")])
-    # Deduplicate skills
     unique_skills = list(set(all_skills))
 
     return {

@@ -4,7 +4,7 @@ from backend.core.database import engine, Base
 
 # Import all models so SQLAlchemy knows about them
 from backend.modules.auth.model import User  # noqa: F401
-from backend.modules.reviews.model import ReviewRecord  # noqa: F401
+from backend.modules.reviews.model import ReviewRecord, Employee  # noqa: F401
 
 # Import routers
 from backend.modules.auth.router import router as auth_router
@@ -24,7 +24,7 @@ app = FastAPI(
 # CORS — allow React frontend to communicate
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["http://localhost:5173", "http://localhost:3000"],
+    allow_origins=["http://localhost:5173", "http://localhost:5174", "http://localhost:3000"],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],

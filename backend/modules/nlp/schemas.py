@@ -5,6 +5,8 @@ class AnalyzeInput(BaseModel):
     employee_name: str
     department: str
     review_text: str
+    behavioral_rating: int
+    performance_rating: int
 
 
 class SentimentResult(BaseModel):
@@ -12,15 +14,12 @@ class SentimentResult(BaseModel):
     confidence: float
 
 
-class ScoreResult(BaseModel):
-    score: str
-    confidence: float
-
-
 class AnalyzeOutput(BaseModel):
     sentiment: SentimentResult
     skills_found: list[str]
-    performance_score: ScoreResult
+    skill_gaps: list[str]
+    behavioral_rating: int
+    performance_rating: int
     recommendations: str
 
 

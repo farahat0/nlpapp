@@ -18,9 +18,9 @@ def extract_skills(text: str) -> list[str]:
     return ["leadership", "communication", "teamwork"]
 
 
-def score_performance(text: str) -> dict:
-    """Mock performance scoring."""
-    return {"score": "4/5", "confidence": 0.88}
+def extract_skill_gaps(text: str) -> list[str]:
+    """Mock skill gap extraction."""
+    return ["public speaking", "time management"]
 
 
 def generate_recommendations(
@@ -34,20 +34,23 @@ def generate_recommendations(
     )
 
 
-def full_analysis(text: str) -> dict:
+def full_analysis(text: str, behavioral_rating: int, performance_rating: int) -> dict:
     """
-    Run all four NLP tasks on the given review text.
-    Returns a dict with sentiment, skills_found, performance_score, recommendations.
+    Run all NLP tasks on the given review text.
+    Returns a dict with sentiment, skills_found, skill_gaps, behavioral_rating,
+    performance_rating, and recommendations.
     """
     sentiment = analyze_sentiment(text)
     skills = extract_skills(text)
-    score = score_performance(text)
+    gaps = extract_skill_gaps(text)
     recommendations = generate_recommendations(
-        sentiment["label"], skills, score["score"]
+        sentiment["label"], skills, "N/A"
     )
     return {
         "sentiment": sentiment,
         "skills_found": skills,
-        "performance_score": score,
+        "skill_gaps": gaps,
+        "behavioral_rating": behavioral_rating,
+        "performance_rating": performance_rating,
         "recommendations": recommendations,
     }

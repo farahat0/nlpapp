@@ -1,19 +1,26 @@
 import { useState, useEffect } from "react";
-import { getReviews, getEmployeeReviews, deleteReview } from "../services/api";
+import { getReviews, deleteReview, getEmployees } from "../services/api";
+
+const RATING_LABELS = {
+  1: "Unsatisfactory",
+  2: "Below Expectations",
+  3: "Meets Expectations",
+  4: "Exceeds Expectations",
+  5: "Exceptional",
+};
 
 export default function EmployeeHistoryPage() {
   const [reviews, setReviews] = useState([]);
-  const [search, setSearch] = useState("");
+  const [employees, setEmployees] = useState([]);
+  const [selectedEmployee, setSelectedEmployee] = useState("");
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
 
-  const fetchReviews = async (name) => {
+  const fetchReviews = async (employeeName) => {
     setLoading(true);
     setError("");
     try {
-      const res = name
-        ? await getEmployeeReviews(name)
-        : await getReviews();
+      const res = await getReviews(employeeName || undefined);
       setReviews(res.data);
     } catch (err) {
       setError(err.response?.data?.detail || "Failed to load reviews");
@@ -23,19 +30,23 @@ export default function EmployeeHistoryPage() {
   };
 
   useEffect(() => {
+    getEmployees()
+      .then((res) => setEmployees(res.data))
+      .catch(() => {});
     fetchReviews();
   }, []);
 
-  const handleSearch = (e) => {
-    e.preventDefault();
-    fetchReviews(search.trim() || null);
+  const handleEmployeeChange = (e) => {
+    const name = e.target.value;
+    setSelectedEmployee(name);
+    fetchReviews(name);
   };
 
   const handleDelete = async (id) => {
     try {
       await deleteReview(id);
       setReviews(reviews.filter((r) => r.id !== id));
-    } catch (err) {
+    } catch {
       setError("Failed to delete review");
     }
   };
@@ -46,33 +57,22 @@ export default function EmployeeHistoryPage() {
         Review History
       </h1>
 
-      <form onSubmit={handleSearch} className="flex gap-2 mb-6">
-        <input
-          type="text"
-          value={search}
-          onChange={(e) => setSearch(e.target.value)}
-          placeholder="Search by employee name..."
-          className="flex-1 border border-gray-300 rounded px-3 py-2 text-sm focus:outline-none focus:border-blue-500"
-        />
-        <button
-          type="submit"
-          className="bg-blue-600 text-white text-sm px-4 py-2 rounded hover:bg-blue-700"
+      {/* Employee filter dropdown */}
+      <div className="mb-6">
+        <label className="block text-sm text-gray-600 mb-1">Filter by Employee</label>
+        <select
+          value={selectedEmployee}
+          onChange={handleEmployeeChange}
+          className="w-full max-w-sm border border-gray-300 rounded px-3 py-2 text-sm focus:outline-none focus:border-blue-500 bg-white"
         >
-          Search
-        </button>
-        {search && (
-          <button
-            type="button"
-            onClick={() => {
-              setSearch("");
-              fetchReviews();
-            }}
-            className="text-sm text-gray-500 hover:text-gray-700 px-2"
-          >
-            Clear
-          </button>
-        )}
-      </form>
+          <option value="">All Employees</option>
+          {employees.map((emp) => (
+            <option key={emp.id} value={emp.name}>
+              {emp.name} — {emp.department}
+            </option>
+          ))}
+        </select>
+      </div>
 
       {error && (
         <p className="text-sm text-red-600 bg-red-50 border border-red-200 rounded px-3 py-2 mb-4">
@@ -114,8 +114,26 @@ export default function EmployeeHistoryPage() {
                   <span className="font-medium">{review.sentiment}</span>
                 </span>
                 <span className="text-gray-600">
-                  Score:{" "}
-                  <span className="font-medium">{review.performance_score}</span>
+                  Behavioral:{" "}
+                  <span className="font-medium">
+                    {review.behavioral_rating}/5
+                    {review.behavioral_rating && (
+                      <span className="text-gray-400 ml-1 text-xs">
+                        ({RATING_LABELS[review.behavioral_rating]})
+                      </span>
+                    )}
+                  </span>
+                </span>
+                <span className="text-gray-600">
+                  Performance:{" "}
+                  <span className="font-medium">
+                    {review.performance_rating}/5
+                    {review.performance_rating && (
+                      <span className="text-gray-400 ml-1 text-xs">
+                        ({RATING_LABELS[review.performance_rating]})
+                      </span>
+                    )}
+                  </span>
                 </span>
               </div>
               {review.skills_found && review.skills_found.length > 0 && (

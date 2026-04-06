@@ -29,16 +29,25 @@ export const loginUser = (username, password) => {
 export const getMe = () => API.get("/api/v1/auth/me");
 
 // NLP
-export const analyzeReview = (employee_name, department, review_text) =>
-  API.post("/api/v1/nlp/analyze", { employee_name, department, review_text });
+export const analyzeReview = (employee_name, department, review_text, behavioral_rating, performance_rating) =>
+  API.post("/api/v1/nlp/analyze", { employee_name, department, review_text, behavioral_rating, performance_rating });
 
 // Reviews
-export const getReviews = () => API.get("/api/v1/reviews/");
+export const getReviews = (employee_name) => {
+  const params = employee_name ? { employee_name } : {};
+  return API.get("/api/v1/reviews/", { params });
+};
 
 export const getEmployeeReviews = (name) =>
   API.get(`/api/v1/reviews/${name}`);
 
-export const deleteReview = (id) => API.delete(`/api/v1/reviews/${id}`);
+
+
+// Employees
+export const getEmployees = () => API.get("/api/v1/reviews/employees");
+
+export const createEmployee = (name, department) =>
+  API.post("/api/v1/reviews/employees", { name, department });
 
 // Analytics
 export const getOverviewStats = () => API.get("/api/v1/analytics/overview");
@@ -48,5 +57,8 @@ export const getDepartmentStats = (department) =>
 
 export const getEmployeeStats = (name) =>
   API.get(`/api/v1/analytics/employee/${name}`);
+
+export const getEmployeeTrend = (name) =>
+  API.get(`/api/v1/analytics/employee/${name}/trend`);
 
 export default API;

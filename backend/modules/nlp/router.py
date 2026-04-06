@@ -20,10 +20,22 @@ async def analyze_review(
     Saves the result to the database and returns the analysis.
     """
     # Save to database (also runs analysis internally)
-    save_analysis(input_data.employee_name, input_data.department, input_data.review_text, db)
+    save_analysis(
+        input_data.employee_name,
+        input_data.department,
+        input_data.review_text,
+        input_data.behavioral_rating,
+        input_data.performance_rating,
+        db,
+        reviewer_username=username,
+    )
 
     # Return the raw analysis result
-    result = full_analysis(input_data.review_text)
+    result = full_analysis(
+        input_data.review_text,
+        input_data.behavioral_rating,
+        input_data.performance_rating,
+    )
     return result
 
 
@@ -39,7 +51,19 @@ async def batch_analyze_reviews(
     """
     results = []
     for review in input_data.reviews:
-        save_analysis(review.employee_name, review.department, review.review_text, db)
-        result = full_analysis(review.review_text)
+        save_analysis(
+            review.employee_name,
+            review.department,
+            review.review_text,
+            review.behavioral_rating,
+            review.performance_rating,
+            db,
+            reviewer_username=username,
+        )
+        result = full_analysis(
+            review.review_text,
+            review.behavioral_rating,
+            review.performance_rating,
+        )
         results.append(result)
     return results

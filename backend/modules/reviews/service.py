@@ -1,11 +1,40 @@
 from sqlalchemy.orm import Session
-from backend.modules.reviews.model import ReviewRecord
+from fastapi import HTTPException, status
+from backend.modules.reviews.model import ReviewRecord, Employee
 from backend.modules.nlp.service import full_analysis
 
 
-def save_analysis(employee_name: str, department: str, review_text: str, db: Session) -> ReviewRecord:
+def create_employee(data, db: Session) -> Employee:
+    """Create a new employee. Raises 400 if name already exists."""
+    existing = db.query(Employee).filter(Employee.name == data.name).first()
+    if existing:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=f"Employee with name '{data.name}' already exists",
+        )
+    employee = Employee(name=data.name, department=data.department)
+    db.add(employee)
+    db.commit()
+    db.refresh(employee)
+    return employee
+
+
+def get_all_employees(db: Session) -> list[Employee]:
+    """Get all employees ordered by name."""
+    return db.query(Employee).order_by(Employee.name).all()
+
+
+def save_analysis(
+    employee_name: str,
+    department: str,
+    review_text: str,
+    behavioral_rating: int,
+    performance_rating: int,
+    db: Session,
+    reviewer_username: str = "",
+) -> ReviewRecord:
     """Run NLP analysis on review text and save results to database."""
-    results = full_analysis(review_text)
+    results = full_analysis(review_text, behavioral_rating, performance_rating)
 
     record = ReviewRecord(
         employee_name=employee_name,
@@ -14,9 +43,11 @@ def save_analysis(employee_name: str, department: str, review_text: str, db: Ses
         sentiment=results["sentiment"]["label"],
         sentiment_confidence=results["sentiment"]["confidence"],
         skills_found=", ".join(results["skills_found"]),
-        performance_score=results["performance_score"]["score"],
-        score_confidence=results["performance_score"]["confidence"],
+        skill_gaps=", ".join(results.get("skill_gaps", [])),
+        behavioral_rating=results["behavioral_rating"],
+        performance_rating=results["performance_rating"],
         recommendations=results["recommendations"],
+        created_by=reviewer_username,
     )
 
     db.add(record)
@@ -25,9 +56,12 @@ def save_analysis(employee_name: str, department: str, review_text: str, db: Ses
     return record
 
 
-def get_all_reviews(db: Session) -> list[ReviewRecord]:
-    """Get all reviews ordered by most recent first."""
-    return db.query(ReviewRecord).order_by(ReviewRecord.created_at.desc()).all()
+def get_all_reviews(db: Session, employee_name: str = None) -> list[ReviewRecord]:
+    """Get all reviews ordered by most recent first, optionally filtered by employee."""
+    query = db.query(ReviewRecord)
+    if employee_name:
+        query = query.filter(ReviewRecord.employee_name == employee_name)
+    return query.order_by(ReviewRecord.created_at.desc()).all()
 
 
 def get_employee_reviews(employee_name: str, db: Session) -> list[ReviewRecord]:
@@ -50,16 +84,4 @@ def get_department_reviews(department: str, db: Session) -> list[ReviewRecord]:
     )
 
 
-def delete_review(review_id: int, db: Session) -> bool:
-    """Delete a review by ID. Returns True if deleted, raises 404 if not found."""
-    from fastapi import HTTPException, status
 
-    record = db.query(ReviewRecord).filter(ReviewRecord.id == review_id).first()
-    if not record:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail=f"Review with id {review_id} not found",
-        )
-    db.delete(record)
-    db.commit()
-    return True
