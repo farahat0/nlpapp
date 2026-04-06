@@ -21,6 +21,7 @@ class AnalyzeOutput(BaseModel):
     behavioral_rating: int
     performance_rating: int
     recommendations: str
+    created_by: str = ""
 
 
 class BatchAnalyzeInput(BaseModel):

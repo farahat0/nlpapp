@@ -109,6 +109,13 @@ export default function ResultsPage() {
             {result.recommendations}
           </p>
         </div>
+
+        {/* Created By */}
+        {result.created_by && (
+          <div className="text-sm text-gray-400">
+            Created by: <span className="font-medium text-gray-500">{result.created_by}</span>
+          </div>
+        )}
       </div>
 
       <div className="mt-6 flex gap-4">

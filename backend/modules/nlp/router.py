@@ -36,6 +36,7 @@ async def analyze_review(
         input_data.behavioral_rating,
         input_data.performance_rating,
     )
+    result["created_by"] = username
     return result
 
 
@@ -65,5 +66,6 @@ async def batch_analyze_reviews(
             review.behavioral_rating,
             review.performance_rating,
         )
+        result["created_by"] = username
         results.append(result)
     return results

@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { getReviews, deleteReview, getEmployees } from "../services/api";
+import { getReviews, getEmployees } from "../services/api";
 
 const RATING_LABELS = {
   1: "Unsatisfactory",
@@ -9,16 +9,113 @@ const RATING_LABELS = {
   5: "Exceptional",
 };
 
+function RatingCard({ title, value }) {
+  return (
+    <div className="bg-gray-50 border border-gray-200 rounded-lg p-3">
+      <h3 className="text-sm font-medium text-gray-500 mb-1">{title}</h3>
+      <p className="text-xl font-semibold text-gray-800">{value}/5</p>
+      <p className="text-xs text-gray-400">{RATING_LABELS[value] || "N/A"}</p>
+    </div>
+  );
+}
+
+function ExpandedReview({ review }) {
+  return (
+    <div className="mt-4 pt-4 border-t border-gray-200 space-y-4">
+      {/* Review Text */}
+      <div className="bg-gray-50 border border-gray-200 rounded-lg p-4">
+        <h3 className="text-sm font-medium text-gray-500 mb-1">Review Text</h3>
+        <p className="text-sm text-gray-700 leading-relaxed whitespace-pre-wrap">
+          {review.review_text}
+        </p>
+      </div>
+
+      {/* Sentiment */}
+      <div className="bg-gray-50 border border-gray-200 rounded-lg p-4">
+        <h3 className="text-sm font-medium text-gray-500 mb-1">Sentiment</h3>
+        <p className="text-lg font-semibold text-gray-800">{review.sentiment}</p>
+        {review.sentiment_confidence != null && (
+          <p className="text-sm text-gray-400">
+            Confidence: {(review.sentiment_confidence * 100).toFixed(0)}%
+          </p>
+        )}
+      </div>
+
+      {/* Behavioral & Performance Ratings */}
+      <div className="grid grid-cols-2 gap-4">
+        <RatingCard title="Behavioral Rating" value={review.behavioral_rating} />
+        <RatingCard title="Performance Rating" value={review.performance_rating} />
+      </div>
+
+      {/* Skills Found */}
+      {review.skills_found && review.skills_found.length > 0 && (
+        <div className="bg-gray-50 border border-gray-200 rounded-lg p-4">
+          <h3 className="text-sm font-medium text-gray-500 mb-2">Skills Identified</h3>
+          <div className="flex flex-wrap gap-2">
+            {review.skills_found.map((skill, i) => (
+              <span
+                key={i}
+                className="bg-green-50 text-green-700 text-sm px-3 py-1 rounded-full border border-green-200"
+              >
+                {skill}
+              </span>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {/* Skill Gaps */}
+      {review.skill_gaps && review.skill_gaps.length > 0 && (
+        <div className="bg-gray-50 border border-gray-200 rounded-lg p-4">
+          <h3 className="text-sm font-medium text-gray-500 mb-2">Skill Gaps</h3>
+          <div className="flex flex-wrap gap-2">
+            {review.skill_gaps.map((gap, i) => (
+              <span
+                key={i}
+                className="bg-orange-50 text-orange-700 text-sm px-3 py-1 rounded-full border border-orange-200"
+              >
+                {gap}
+              </span>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {/* Recommendations */}
+      {review.recommendations && (
+        <div className="bg-gray-50 border border-gray-200 rounded-lg p-4">
+          <h3 className="text-sm font-medium text-gray-500 mb-1">Recommendations</h3>
+          <p className="text-sm text-gray-700 leading-relaxed">
+            {review.recommendations}
+          </p>
+        </div>
+      )}
+
+      {/* Meta info */}
+      <div className="flex items-center gap-4 text-xs text-gray-400 pt-1">
+        {review.created_by && (
+          <span>Created by: <span className="font-medium text-gray-500">{review.created_by}</span></span>
+        )}
+        <span>
+          {new Date(review.created_at).toLocaleString()}
+        </span>
+      </div>
+    </div>
+  );
+}
+
 export default function EmployeeHistoryPage() {
   const [reviews, setReviews] = useState([]);
   const [employees, setEmployees] = useState([]);
   const [selectedEmployee, setSelectedEmployee] = useState("");
+  const [expandedId, setExpandedId] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
 
   const fetchReviews = async (employeeName) => {
     setLoading(true);
     setError("");
+    setExpandedId(null);
     try {
       const res = await getReviews(employeeName || undefined);
       setReviews(res.data);
@@ -42,13 +139,8 @@ export default function EmployeeHistoryPage() {
     fetchReviews(name);
   };
 
-  const handleDelete = async (id) => {
-    try {
-      await deleteReview(id);
-      setReviews(reviews.filter((r) => r.id !== id));
-    } catch {
-      setError("Failed to delete review");
-    }
+  const toggleCard = (id) => {
+    setExpandedId((prev) => (prev === id ? null : id));
   };
 
   return (
@@ -86,70 +178,44 @@ export default function EmployeeHistoryPage() {
         <p className="text-gray-500 text-sm">No reviews found.</p>
       ) : (
         <div className="space-y-3">
-          {reviews.map((review) => (
-            <div
-              key={review.id}
-              className="bg-white border border-gray-200 rounded-lg p-4"
-            >
-              <div className="flex justify-between items-start mb-2">
-                <div>
-                  <p className="font-medium text-gray-800">
-                    {review.employee_name}
-                  </p>
-                  <p className="text-sm text-gray-400">
-                    {review.department} —{" "}
-                    {new Date(review.created_at).toLocaleDateString()}
-                  </p>
-                </div>
-                <button
-                  onClick={() => handleDelete(review.id)}
-                  className="text-sm text-gray-400 hover:text-red-500"
-                >
-                  Delete
-                </button>
-              </div>
-              <div className="flex gap-4 text-sm">
-                <span className="text-gray-600">
-                  Sentiment:{" "}
-                  <span className="font-medium">{review.sentiment}</span>
-                </span>
-                <span className="text-gray-600">
-                  Behavioral:{" "}
-                  <span className="font-medium">
-                    {review.behavioral_rating}/5
-                    {review.behavioral_rating && (
-                      <span className="text-gray-400 ml-1 text-xs">
-                        ({RATING_LABELS[review.behavioral_rating]})
-                      </span>
+          {reviews.map((review) => {
+            const isExpanded = expandedId === review.id;
+            return (
+              <div
+                key={review.id}
+                className={`bg-white border rounded-lg p-4 cursor-pointer transition-all duration-200 ${
+                  isExpanded
+                    ? "border-blue-300 shadow-sm"
+                    : "border-gray-200 hover:border-gray-300 hover:shadow-sm"
+                }`}
+                onClick={() => toggleCard(review.id)}
+              >
+                {/* Collapsed header — always visible */}
+                <div className="flex justify-between items-start">
+                  <div>
+                    <p className="font-medium text-gray-800">
+                      {review.employee_name}
+                    </p>
+                    <p className="text-sm text-gray-400">
+                      {review.department} —{" "}
+                      {new Date(review.created_at).toLocaleDateString()}
+                    </p>
+                    {review.created_by && (
+                      <p className="text-xs text-gray-400 mt-0.5">
+                        Created by: <span className="text-gray-500 font-medium">{review.created_by}</span>
+                      </p>
                     )}
+                  </div>
+                  <span className="text-gray-300 text-lg">
+                    {isExpanded ? "▲" : "▼"}
                   </span>
-                </span>
-                <span className="text-gray-600">
-                  Performance:{" "}
-                  <span className="font-medium">
-                    {review.performance_rating}/5
-                    {review.performance_rating && (
-                      <span className="text-gray-400 ml-1 text-xs">
-                        ({RATING_LABELS[review.performance_rating]})
-                      </span>
-                    )}
-                  </span>
-                </span>
-              </div>
-              {review.skills_found && review.skills_found.length > 0 && (
-                <div className="flex flex-wrap gap-1 mt-2">
-                  {review.skills_found.map((skill, i) => (
-                    <span
-                      key={i}
-                      className="bg-gray-100 text-gray-600 text-xs px-2 py-0.5 rounded-full"
-                    >
-                      {skill}
-                    </span>
-                  ))}
                 </div>
-              )}
-            </div>
-          ))}
+
+                {/* Expanded detail */}
+                {isExpanded && <ExpandedReview review={review} />}
+              </div>
+            );
+          })}
         </div>
       )}
     </div>
