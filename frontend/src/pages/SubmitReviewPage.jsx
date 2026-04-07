@@ -96,7 +96,7 @@ function CreateEmployeeModal({ isOpen, onClose, onCreated }) {
               value={name}
               onChange={(e) => setName(e.target.value)}
               required
-              placeholder="e.g. John Smith"
+              placeholder="e.g. ahmed farahat"
               className="w-full border border-gray-300 rounded px-3 py-2 text-sm focus:outline-none focus:border-blue-500"
             />
           </div>
