@@ -1,0 +1,5 @@
+IMPORT ERROR: cannot import name 'SaT' from 'wtpsplit' (D:\vsplayG\nlpapp\.venv\Lib\site-packages\wtpsplit\__init__.py)
+Traceback (most recent call last):
+  File "D:\vsplayG\nlpapp\test_sat.py", line 5, in <module>
+    from wtpsplit import SaT
+ImportError: cannot import name 'SaT' from 'wtpsplit' (D:\vsplayG\nlpapp\.venv\Lib\site-packages\wtpsplit\__init__.py)

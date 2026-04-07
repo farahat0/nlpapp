@@ -20,6 +20,12 @@ class Settings(BaseSettings):
     SCORING_MODEL: str = "./ai/models/hr-scoring-model"
     FLAN_T5_MODEL: str = "./ai/models/hr-flan-t5-model"
 
+    # HuggingFace token for private model repos
+    HF_TOKEN: str = ""
+    
+    # Google GenAI API Key for recommendations
+    GOOGLE_API_KEY: str = ""
+
     class Config:
         env_file = ".env"
 
