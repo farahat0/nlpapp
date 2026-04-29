@@ -23,3 +23,12 @@ ai/models/
 node_modules/
 dist/
 hr-nlp-project-planning.md
+
+# Logs and temporary files
+sync_err.txt
+test_import.py
+test_result.txt
+test_sat_trace.txt
+test_sat.out
+test_sat.py
+wtpsplit_err.txt
