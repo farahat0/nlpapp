@@ -1,7 +1,7 @@
 [project]
 name = "nlpapp"
 version = "0.1.0"
-description = "Add your description here"
+description = "hr nlp app"
 readme = "README.md"
 requires-python = ">=3.12"
 dependencies = [
