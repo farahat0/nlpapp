@@ -9,6 +9,23 @@ const RATING_LABELS = {
   5: "Exceptional",
 };
 
+const formatRecommendations = (text) => {
+  if (!text) return null;
+  if (text.includes('* ')) {
+    const items = text.split('* ').filter(item => item.trim() !== '');
+    return (
+      <div className="space-y-3 mt-1">
+        {items.map((item, index) => (
+          <p key={index} className="text-sm text-gray-700 leading-relaxed">
+            • {item.trim()}
+          </p>
+        ))}
+      </div>
+    );
+  }
+  return <p className="text-sm text-gray-700 leading-relaxed">{text}</p>;
+};
+
 function RatingCard({ title, value }) {
   return (
     <div className="bg-gray-50 border border-gray-200 rounded-lg p-3">
@@ -85,9 +102,7 @@ function ExpandedReview({ review }) {
       {review.recommendations && (
         <div className="bg-gray-50 border border-gray-200 rounded-lg p-4">
           <h3 className="text-sm font-medium text-gray-500 mb-1">Recommendations</h3>
-          <p className="text-sm text-gray-700 leading-relaxed">
-            {review.recommendations}
-          </p>
+          {formatRecommendations(review.recommendations)}
         </div>
       )}
 

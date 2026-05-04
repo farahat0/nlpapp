@@ -8,6 +8,23 @@ const RATING_LABELS = {
   5: "Exceptional",
 };
 
+const formatRecommendations = (text) => {
+  if (!text) return null;
+  if (text.includes('* ')) {
+    const items = text.split('* ').filter(item => item.trim() !== '');
+    return (
+      <div className="space-y-3 mt-1">
+        {items.map((item, index) => (
+          <p key={index} className="text-sm text-gray-700 leading-relaxed">
+            • {item.trim()}
+          </p>
+        ))}
+      </div>
+    );
+  }
+  return <p className="text-sm text-gray-700 leading-relaxed">{text}</p>;
+};
+
 function RatingCard({ title, value }) {
   return (
     <div className="bg-white border border-gray-200 rounded-lg p-4">
@@ -105,9 +122,7 @@ export default function ResultsPage() {
           <h2 className="text-sm font-medium text-gray-500 mb-1">
             Recommendations
           </h2>
-          <p className="text-sm text-gray-700 leading-relaxed">
-            {result.recommendations}
-          </p>
+          {formatRecommendations(result.recommendations)}
         </div>
 
         {/* Created By */}

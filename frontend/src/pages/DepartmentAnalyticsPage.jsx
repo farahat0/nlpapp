@@ -215,6 +215,43 @@ export default function DepartmentAnalyticsPage() {
         <p className="text-gray-500 text-sm">Loading...</p>
       ) : activeData ? (
         <>
+          {/* Filters */}
+          <div className="flex flex-col sm:flex-row gap-4 mb-6">
+            {/* Department Filter */}
+            <div className="flex-1 bg-white border border-gray-200 rounded-lg p-4">
+              <h3 className="text-sm font-medium text-gray-500 mb-2">Filter by Department</h3>
+              <select
+                value={selectedDept}
+                onChange={handleDeptSelect}
+                className="w-full border border-gray-300 rounded px-3 py-2 text-sm focus:outline-none focus:border-blue-500 bg-white"
+              >
+                <option value="">All Departments (Overview)</option>
+                {departments.map((d) => (
+                  <option key={d} value={d}>
+                    {d}
+                  </option>
+                ))}
+              </select>
+            </div>
+
+            {/* Employee Trend Filter */}
+            <div className="flex-1 bg-white border border-gray-200 rounded-lg p-4">
+              <h3 className="text-sm font-medium text-gray-500 mb-2">Employee Rating Trend</h3>
+              <select
+                value={selectedEmployee}
+                onChange={handleEmployeeSelect}
+                className="w-full border border-gray-300 rounded px-3 py-2 text-sm focus:outline-none focus:border-blue-500 bg-white"
+              >
+                <option value="">Select an employee...</option>
+                {employees.map((emp) => (
+                  <option key={emp.id} value={emp.name}>
+                    {emp.name} — {emp.department}
+                  </option>
+                ))}
+              </select>
+            </div>
+          </div>
+
           {/* Summary Bar */}
           <div className="grid grid-cols-3 gap-4 mb-6">
             <StatCard
@@ -254,40 +291,12 @@ export default function DepartmentAnalyticsPage() {
             />
           </div>
 
-          {/* Department Filter */}
-          <div className="mb-6 bg-white border border-gray-200 rounded-lg p-4">
-            <h3 className="text-sm font-medium text-gray-500 mb-2">Filter by Department</h3>
-            <select
-              value={selectedDept}
-              onChange={handleDeptSelect}
-              className="w-full max-w-sm border border-gray-300 rounded px-3 py-2 text-sm focus:outline-none focus:border-blue-500 bg-white"
-            >
-              <option value="">All Departments (Overview)</option>
-              {departments.map((d) => (
-                <option key={d} value={d}>
-                  {d}
-                </option>
-              ))}
-            </select>
-          </div>
-
-          {/* Employee Trend */}
-          <div className="bg-white border border-gray-200 rounded-lg p-4">
-            <h3 className="text-sm font-medium text-gray-500 mb-2">Employee Rating Trend</h3>
-            <select
-              value={selectedEmployee}
-              onChange={handleEmployeeSelect}
-              className="w-full max-w-sm border border-gray-300 rounded px-3 py-2 text-sm focus:outline-none focus:border-blue-500 bg-white mb-4"
-            >
-              <option value="">Select an employee...</option>
-              {employees.map((emp) => (
-                <option key={emp.id} value={emp.name}>
-                  {emp.name} — {emp.department}
-                </option>
-              ))}
-            </select>
-            {selectedEmployee && <TrendLineChart data={trendData} />}
-          </div>
+          {/* Employee Trend Chart */}
+          {selectedEmployee && (
+            <div className="bg-white border border-gray-200 rounded-lg p-4">
+              <TrendLineChart data={trendData} />
+            </div>
+          )}
         </>
       ) : null}
     </div>
