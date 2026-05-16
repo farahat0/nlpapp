@@ -3,7 +3,8 @@
 
 - rename the file `.env.temp`  to `.env` and paste the environment variables that i will send it by mail in this file (otherwise error will appear) else send me mail to receive the env variables **ahmedmipf@gmail.com**
 
-- install dependencies from the pyproject.toml (uv) run the command ( `uv pip install -r pyproject.toml` )
+- install dependencies from the pyproject.toml (uv) run the command ( `uv pip install -r pyproject.toml` ) backend
+- frontend dependencies run (`npm install`) after cd to frontend
 
 - open new terminal
 
